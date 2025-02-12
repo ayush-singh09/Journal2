@@ -263,6 +263,13 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
+            getLocalStorage();
+            // Also get the last used ID to continue from there
+            const lastEntry = journalEntries[0];
+            if (lastEntry) {
+                const lastId = parseInt(lastEntry.id.split('_')[1]);
+                currentId = lastId + 1;
+            }
             initializeTheme();
             checkAuthentication();
         });
