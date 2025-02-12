@@ -274,6 +274,111 @@
             checkAuthentication();
         });
 
+        function getLocalStorage() {
+            const storedEntries = localStorage.getItem('journal');
+            if (storedEntries) {
+                journalEntries = JSON.parse(storedEntries);
+                displayEntries();
+            }
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('journal', JSON.stringify(journalEntries));
+        }
+
+        function generateUniqueId() {
+            return `journal_${currentId++}`;
+        }
+
+        function saveEntry() {
+            const input = document.getElementById('journalInput');
+            const text = input.value.trim();
+
+            if (text) {
+                const now = new Date();
+                const entry = {
+                    id: generateUniqueId(),
+                    date: now.toLocaleString(),
+                    text: text
+                };
+
+                journalEntries.unshift(entry);
+                saveToLocalStorage();
+                input.value = '';
+                displayEntries();
+            }
+        }
+
+        function deleteEntry(id) {
+            journalEntries = journalEntries.filter(entry => entry.id !== id);
+            saveToLocalStorage();
+            displayEntries();
+        }
+
+        function editEntry(id) {
+            const entry = journalEntries.find(entry => entry.id === id);
+            if (entry) {
+                currentEditId = id;
+                document.getElementById('editInput').value = entry.text;
+                document.getElementById('editModal').style.display = 'flex';
+            }
+        }
+
+        function updateEntry() {
+            if (currentEditId) {
+                const newText = document.getElementById('editInput').value.trim();
+                if (newText) {
+                    const entryIndex = journalEntries.findIndex(entry => entry.id === currentEditId);
+                    if (entryIndex !== -1) {
+                        journalEntries[entryIndex].text = newText;
+                        saveToLocalStorage();
+                        displayEntries();
+                        closeModal();
+                    }
+                }
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+            currentEditId = null;
+        }
+
+        function displayEntries() {
+            const container = document.getElementById('entriesContainer');
+            container.innerHTML = '';
+
+            journalEntries.forEach(entry => {
+                const entryElement = document.createElement('div');
+                entryElement.className = 'entry';
+                entryElement.innerHTML = `
+                    <div class="entry-id">ID: ${entry.id}</div>
+                    <div class="entry-date">${entry.date}</div>
+                    <div class="entry-text">${entry.text}</div>
+                    <div class="action-buttons">
+                        <button class="edit-btn" onclick="editEntry('${entry.id}')">✎</button>
+                        <button class="delete-btn" onclick="deleteEntry('${entry.id}')">×</button>
+                    </div>
+                `;
+                container.appendChild(entryElement);
+            });
+        }
+
+        // Allow saving with Enter key
+        document.getElementById('journalInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                saveEntry();
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
         // Theme Management
         function initializeTheme() {
             const savedTheme = localStorage.getItem('journalTheme') || 'light';
